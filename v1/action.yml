@@ -2,20 +2,24 @@ name: GDI Deploy 1.0
 description: Set version, build and push docker image to github registry for a gdi service.
 
 on:
-  workflow_dispatch:
+  workflow_call:
     inputs:
       update-openapi-version:
         description: If the version of an OpenAPI specification should be updated
         required: false
+        type: boolean
       openapi-spec-file:
         description: Path to the openapi yml specification file to update, relative to the root of the repository.
         required: false
+        type: string
       update-package-json-version:
         description: If the version of package.json should be updated.
         required: false
+        type: boolean
       release-tag-name:
         description: The tag that was just released
         required: true
+        type: string
       
 
 jobs:
