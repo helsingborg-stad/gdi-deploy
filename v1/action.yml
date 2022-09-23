@@ -59,19 +59,20 @@ runs:
       -
         name: Set openapi version
         uses: rmeneely/update-yaml@v1
+        if: inputs.update-openapi-version == 'true'
         with:
           infile: ${{ inputs.openapi-spec-file }}
           varlist: info.version=${{ inputs.release-tag-name }}
 
       - 
         name: Set package.json version
-        if: inputs.update-package-version == true
+        if: inputs.update-package-version == 'true'
         run: npm version --no-git-tag-version ${{ inputs.release-tag-name }}
         shell: bash
       
       - 
         name: Commit and push
-        if: inputs.update-openapi-version == true || inputs.update-package-version == true
+        if: inputs.update-openapi-version == 'true' || inputs.update-package-version == 'true'
         run: |
           git config user.name github-actions
           git config user.email github-actions@github.com
