@@ -10,7 +10,7 @@ inputs:
     description: Path to the openapi yml specification file to update, relative to the root of the repository.
     required: false
     type: string
-  update-package-json-version:
+  update-package-version:
     description: If the version of package.json should be updated.
     required: false
     type: boolean
