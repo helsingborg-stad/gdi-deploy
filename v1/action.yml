@@ -19,51 +19,36 @@ inputs:
     required: true
     type: string
   
-  GDI_GITOPS_CONFIG_REPO:
+  gdi-gitops-config-repo:
     description: The repository to update configs in for a deploy
     required: true
     type: string
-  GITHUB_TOKEN:
+  github-token:
     description: GitHub Token  
     required: true
     type: string
-  GDI_GITOPS_TOKEN:
+  gdi-gitops-token:
     description: GDI GitOps Token
     required: true
     type: string
-  GDI_GITOPS_APP:
+  gdi-gitops-app:
     description: The GDI app to update
     required: true
     type: string
 
+  docker-username:
+    description: Username to use when logging in to the docker registry
+    required: true
+    type: string
+  
+  docker-password:
+    description: Password to use when logging in to the docker registry
+    required: true
+    type: string
 
 runs:
   using: composite
   steps:
-    # - name: Dump GitHub context
-    #   id: github_context_step
-    #   run: echo '${{ toJSON(github) }}'
-    #   shell: bash
-
-    # - name: Dump job context
-    #   run: echo '${{ toJSON(job) }}'
-    #   shell: bash
-
-    # - name: Dump steps context
-    #   run: echo '${{ toJSON(steps) }}'
-    #   shell: bash
-
-    # - name: Dump runner context
-    #   run: echo '${{ toJSON(runner) }}'
-    #   shell: bash
-
-    # - name: Dump strategy context
-    #   run: echo '${{ toJSON(strategy) }}'
-    #   shell: bash
-
-    # - name: Dump matrix context
-    #   run: echo '${{ toJSON(matrix) }}'
-    #   shell: bash
       -
         name: Checkout code
         uses: actions/checkout@v3
@@ -111,8 +96,8 @@ runs:
         uses: docker/login-action@v1
         with:
           registry: ghcr.io
-          username: ${{ github.repository_owner }}
-          password: ${{ inputs.GITHUB_TOKEN }}
+          username: ${{ inputs.docker-username }}
+          password: ${{ inputs.docker-password }}
 
       - name: Docker meta
         id: meta
@@ -145,9 +130,9 @@ runs:
         uses: convictional/trigger-workflow-and-wait@v1.3.0
         with:
           owner: helsingborg-stad
-          repo: ${{ inputs.GDI_GITOPS_CONFIG_REPO }}
-          github_token: ${{ inputs.GDI_GITOPS_TOKEN }}
+          repo: ${{ inputs.gdi-gitops-config-repo }}
+          github_token: ${{ inputs.gdi-gitops-token }}
           workflow_file_name: update-config.yml
-          inputs: '{"semver": "${{ github.event.release.tag_name }}", "app": "${{ inputs.GDI_GITOPS_APP }}"}'
+          inputs: '{"semver": "${{ github.event.release.tag_name }}", "app": "${{ inputs.gdi-gitops-app }}"}'
           wait_workflow: false
           ref: main
