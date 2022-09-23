@@ -103,7 +103,7 @@ runs:
         id: meta
         uses: docker/metadata-action@v4
         with:
-          github-token: ${{ inputs.GITHUB_TOKEN }}
+          github-token: ${{ inputs.github-token }}
           images: ghcr.io/${{ steps.string.outputs.lowercase }}
           tags: |
             # set latest tag for default branch
