@@ -35,7 +35,6 @@ jobs:
       -
         name: Set openapi version
         uses: rmeneely/update-yaml@v1
-        if: inputs.update-openapi-version == true
         with:
           infile: ${{ inputs.openapi-spec-file }}
           varlist: info.version=${{ inputs.release-tag-name }}
