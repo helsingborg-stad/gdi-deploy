@@ -18,6 +18,24 @@ inputs:
     description: The tag that was just released
     required: true
     type: string
+  
+  GDI_GITOPS_CONFIG_REPO:
+    description: The repository to update configs in for a deploy
+    required: true
+    type: string
+  GITHUB_TOKEN:
+    description: GitHub Token  
+    required: true
+    type: string
+  GDI_GITOPS_TOKEN:
+    description: GDI GitOps Token
+    required: true
+    type: string
+  GDI_GITOPS_APP:
+    description: The GDI app to update
+    required: true
+    type: string
+
 
 runs:
   using: composite
@@ -100,7 +118,7 @@ runs:
         id: meta
         uses: docker/metadata-action@v4
         with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
+          github-token: ${{ inputs.GITHUB_TOKEN }}
           images: ghcr.io/${{ steps.string.outputs.lowercase }}
           tags: |
             # set latest tag for default branch
@@ -127,9 +145,9 @@ runs:
         uses: convictional/trigger-workflow-and-wait@v1.3.0
         with:
           owner: helsingborg-stad
-          repo: ${{ secrets.GDI_GITOPS_CONFIG_REPO }}
-          github_token: ${{ secrets.GDI_GITOPS_TOKEN }}
+          repo: ${{ inputs.GDI_GITOPS_CONFIG_REPO }}
+          github_token: ${{ inputs.GDI_GITOPS_TOKEN }}
           workflow_file_name: update-config.yml
-          inputs: '{"semver": "${{ github.event.release.tag_name }}", "app": "${{ secrets.GDI_GITOPS_APP }}"}'
+          inputs: '{"semver": "${{ github.event.release.tag_name }}", "app": "${{ inputs.GDI_GITOPS_APP }}"}'
           wait_workflow: false
           ref: main
