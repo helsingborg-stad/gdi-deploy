@@ -25,9 +25,9 @@ jobs:
       -
         name: Set openapi version
         uses: rmeneely/update-yaml@v1
-        if: github.event.inputs.update-openapi-version == true
+        if: inputs.update-openapi-version == true
         with:
-          infile: ${{ github.event.inputs.openapi-spec-file }}
+          infile: ${{ inputs.openapi-spec-file }}
           varlist: info.version=${{ github.event.release.tag_name }}
       
       - 
