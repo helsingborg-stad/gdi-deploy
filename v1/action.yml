@@ -1,23 +1,22 @@
 name: GDI Deploy 1.0
 description: Set version, build and push docker image to github registry for a gdi service.
 
-on:
-  workflow_dispatch:
-    inputs:
-      update-openapi-version:
-        description: If the version of an OpenAPI specification should be updated
-        required: false
-      openapi-spec-file:
-        description: Path to the openapi yml specification file to update, relative to the root of the repository.
-        required: false
-      update-package-json-version:
-        description: If the version of package.json should be updated.
-        required: false
+inputs:
+  update-openapi-version:
+    description: If the version of an OpenAPI specification should be updated
+    required: false
+  openapi-spec-file:
+    description: Path to the openapi yml specification file to update, relative to the root of the repository.
+    required: false
+  update-package-json-version:
+    description: If the version of package.json should be updated.
+    required: false
       
 
-jobs:
-  set-version:
-    runs-on: ubuntu-latest
+
+runs:
+  using: composite
+  steps:
     steps:
       -
         name: Checkout code
@@ -47,11 +46,7 @@ jobs:
           git add .
           git commit -am "🔖 Set versions to release tag ${{ github.event.release.tag_name }}"
           git push -f origin main
-
-  build:
-    needs: set-version
-    runs-on: ubuntu-latest
-    steps:
+          
       - name: Checkout
         uses: actions/checkout@v3
         with:
