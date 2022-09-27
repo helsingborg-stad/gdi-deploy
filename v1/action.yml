@@ -35,6 +35,10 @@ inputs:
     description: The GDI app to update
     required: true
     type: string
+  gdi-gitops-env:
+    description: The GDI apps environment to deploy to
+    required: true
+    type: string
 
   docker-username:
     description: Username to use when logging in to the docker registry
@@ -134,6 +138,6 @@ runs:
           repo: ${{ inputs.gdi-gitops-config-repo }}
           github_token: ${{ inputs.gdi-gitops-token }}
           workflow_file_name: update-config.yml
-          inputs: '{"semver": "${{ github.event.release.tag_name }}", "app": "${{ inputs.gdi-gitops-app }}"}'
+          inputs: '{"semver": "${{ github.event.release.tag_name }}", "app": "${{ inputs.gdi-gitops-app }}", "environment": "${{ inputs.gdi-gitops-env }}"}'
           wait_workflow: false
           ref: main

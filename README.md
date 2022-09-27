@@ -15,5 +15,6 @@ This action will (optionally) set versions, build and deploy docker images for G
 | github-token           | Github token                                                                                  | true     |
 | gdi-gitops-token       | GDI Gitops token                                                                              | true     |
 | gdi-gitops-app         | Name of the app in the config repo                                                            | true     |
+| gdi-gitops-env         | Name of the overlay to update in the config repo                                              | true     |
 | docker-username        | Username to use when logging in to the docker registry                                        | true     |
 | docker-password        | Password to use when logging in to the docker registry                                        | true     |
