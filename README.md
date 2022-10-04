@@ -12,7 +12,7 @@ This action will (optionally) set versions, build and deploy docker images for G
 | update-package-version | If the version of package.json should be updated.                                             | false    |
 | release-tag-name       | The tag that was just released                                                                | true     |
 | gdi-gitops-config-repo | The repository to update configs in for a deploy                                              | true     |
-| github-token           | Github token                                                                                  | true     |
+| github-token           | Github token, with `write:package`, `read:package` and`repo:*` scopes                         | true     |
 | gdi-gitops-token       | GDI Gitops token                                                                              | true     |
 | gdi-gitops-app         | Name of the app in the config repo                                                            | true     |
 | gdi-gitops-env         | Name of the overlay to update in the config repo                                              | true     |

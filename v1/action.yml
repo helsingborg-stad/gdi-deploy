@@ -130,6 +130,9 @@ runs:
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+          build-args: |
+            GITHUB_ACCESS_TOKEN=${{ inputs.github-token }}
+            
 
       - name: Trigger config repo update
         uses: convictional/trigger-workflow-and-wait@v1.3.0
