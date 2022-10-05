@@ -1,6 +1,14 @@
-# gdi-deploy
-Github action for deploying GDI microservice
+<p>
+  <a href="https://github.com/helsingborg-stad/gdi-k8s-config">
+    <img src="docs/images/hbg-github-logo-combo.png" alt="Logo" width="300">
+  </a>
+</p>
+<h1>GDI Deploy</h1>
+<p>
+  Github action for deploying GDI microservice
+</p>
 
+# Summary
 This action will (optionally) set versions, build and deploy docker images for GDI microservices.
 
 # Parameters
