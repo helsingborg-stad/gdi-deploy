@@ -71,7 +71,7 @@ runs:
       - 
         name: Set package.json version
         if: inputs.update-package-version == 'true'
-        run: npm version --no-git-tag-version ${{ inputs.release-tag-name }}
+        run: npm version --allow-same-version --no-git-tag-version ${{ inputs.release-tag-name }}
         shell: bash
       
       - 
