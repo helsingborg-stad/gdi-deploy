@@ -50,6 +50,11 @@ inputs:
     required: true
     type: string
 
+  extra-build-args:
+    description: 'Extra build arguments to pass to Docker'
+    required: false
+    default: ''
+
 runs:
   using: composite
   steps:
@@ -132,6 +137,7 @@ runs:
           labels: ${{ steps.meta.outputs.labels }}
           build-args: |
             GITHUB_ACCESS_TOKEN=${{ inputs.github-token }}
+            ${{ inputs.extra-build-args }}
             
 
       - name: Trigger config repo update
