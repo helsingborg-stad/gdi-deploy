@@ -55,6 +55,11 @@ inputs:
     required: false
     default: ''
 
+  git-checkout-branch:
+    description: The branch to checkout for building
+    required: false
+    default: main
+
 runs:
   using: composite
   steps:
@@ -63,7 +68,7 @@ runs:
         uses: actions/checkout@v3
         with:
           fetch-depth: 0
-          ref: main
+          ref: ${{ inputs.git-checkout-branch }}
 
       -
         name: Set openapi version
