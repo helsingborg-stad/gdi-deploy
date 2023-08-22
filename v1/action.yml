@@ -92,7 +92,7 @@ runs:
           git config user.email github-actions@github.com
           git add .
           git diff --exit-code || git commit -am "🔖 Set versions to release tag ${{ inputs.release-tag-name }}"
-          git push -f origin main
+          git push -f origin ${{ inputs.git-checkout-branch }}
         shell: bash
 
       - name: Checkout
