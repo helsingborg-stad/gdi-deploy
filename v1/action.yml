@@ -64,6 +64,12 @@ runs:
   using: composite
   steps:
       -
+        name: Echo debug info
+        run: |
+          echo "Setting version to ${{ inputs.release-tag-name }}"
+          echo "App is ${{ inputs.gdi-gitops-app }}"
+          echo "Environment is ${{ inputs.gdi-gitops-env }}"
+      -
         name: Checkout code
         uses: actions/checkout@v3
         with:
