@@ -65,6 +65,7 @@ runs:
   steps:
       -
         name: Echo debug info
+        shell: bash
         run: |
           echo "Setting version to ${{ inputs.release-tag-name }}"
           echo "App is ${{ inputs.gdi-gitops-app }}"
