@@ -159,6 +159,6 @@ runs:
           repo: ${{ inputs.gdi-gitops-config-repo }}
           github_token: ${{ inputs.gdi-gitops-token }}
           workflow_file_name: update-config.yml
-          inputs: '{"semver": "${{ github.event.release.tag_name }}", "app": "${{ inputs.gdi-gitops-app }}", "environment": "${{ inputs.gdi-gitops-env }}"}'
+          inputs: '{"semver": "${{ inputs.release-tag-name }}", "app": "${{ inputs.gdi-gitops-app }}", "environment": "${{ inputs.gdi-gitops-env }}"}'
           wait_workflow: false
           ref: main
