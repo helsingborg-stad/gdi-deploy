@@ -138,6 +138,7 @@ runs:
             type=semver,pattern=v{{major}}.{{minor}}
             type=semver,pattern=v{{major}}
             type=sha
+            type=sha,format=long
 
       - name: Build and push
         id: docker_build
