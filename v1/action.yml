@@ -54,7 +54,6 @@ inputs:
     description: If we should not use cache when building.
     required: false
     type: boolean
-    default: false
 
   extra-build-args:
     description: 'Extra build arguments to pass to Docker'
