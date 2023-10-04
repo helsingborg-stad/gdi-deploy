@@ -50,6 +50,12 @@ inputs:
     required: true
     type: string
 
+  docker-no-cache:
+    description: If we should not use cache when building.
+    required: false
+    type: boolean
+    default: false
+
   extra-build-args:
     description: 'Extra build arguments to pass to Docker'
     required: false
@@ -148,6 +154,7 @@ runs:
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+          no-cache: ${{ inputs.docker-use-cache }}
           build-args: |
             GITHUB_ACCESS_TOKEN=${{ inputs.github-token }}
             ${{ inputs.extra-build-args }}
