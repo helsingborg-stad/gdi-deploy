@@ -53,6 +53,7 @@ inputs:
   docker-no-cache:
     description: If we should not use cache when building.
     required: false
+    default: false
     type: boolean
 
   extra-build-args:
