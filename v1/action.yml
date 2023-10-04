@@ -153,7 +153,7 @@ runs:
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-          no-cache: ${{ inputs.docker-use-cache }}
+          no-cache: ${{ inputs.docker-no-cache }}
           build-args: |
             GITHUB_ACCESS_TOKEN=${{ inputs.github-token }}
             ${{ inputs.extra-build-args }}
