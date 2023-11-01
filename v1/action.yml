@@ -1,4 +1,4 @@
-name: GDI Deploy 1.0
+name: MR SPEX TEST Deploy 1.0
 description: Set version, build and push docker image to github registry for a gdi service.
 
 inputs:
@@ -18,13 +18,13 @@ inputs:
     description: The tag that was just released
     required: true
     type: string
-  
+
   gdi-gitops-config-repo:
     description: The repository to update configs in for a deploy
     required: true
     type: string
   github-token:
-    description: GitHub Token  
+    description: GitHub Token
     required: true
     type: string
   gdi-gitops-token:
@@ -38,13 +38,14 @@ inputs:
   gdi-gitops-env:
     description: The GDI apps environment to deploy to
     required: true
+    default: dev
     type: string
 
   docker-username:
     description: Username to use when logging in to the docker registry
     required: true
     type: string
-  
+
   docker-password:
     description: Password to use when logging in to the docker registry
     required: true
@@ -57,9 +58,9 @@ inputs:
     type: boolean
 
   extra-build-args:
-    description: 'Extra build arguments to pass to Docker'
+    description: "Extra build arguments to pass to Docker"
     required: false
-    default: ''
+    default: ""
 
   git-checkout-branch:
     description: The branch to checkout for building
@@ -69,104 +70,98 @@ inputs:
 runs:
   using: composite
   steps:
-      -
-        name: Echo debug info
-        shell: bash
-        run: |
-          echo "Setting version to ${{ inputs.release-tag-name }}"
-          echo "App is ${{ inputs.gdi-gitops-app }}"
-          echo "Environment is ${{ inputs.gdi-gitops-env }}"
-      -
-        name: Checkout code
-        uses: actions/checkout@v3
-        with:
-          fetch-depth: 0
-          ref: ${{ inputs.git-checkout-branch }}
+    - name: Echo debug info
+      shell: bash
+      run: |
+        echo "Setting version to ${{ inputs.release-tag-name }}"
+        echo "App is ${{ inputs.gdi-gitops-app }}"
+        echo "Environment is ${{ inputs.gdi-gitops-env }}"
+    - name: Checkout code
+      uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
+        ref: ${{ inputs.git-checkout-branch }}
 
-      -
-        name: Set openapi version
-        uses: rmeneely/update-yaml@v1
-        if: inputs.update-openapi-version == 'true'
-        with:
-          infile: ${{ inputs.openapi-spec-file }}
-          varlist: info.version=${{ inputs.release-tag-name }}
+    - name: Set openapi version
+      uses: rmeneely/update-yaml@v1
+      if: inputs.update-openapi-version == 'true'
+      with:
+        infile: ${{ inputs.openapi-spec-file }}
+        varlist: info.version=${{ inputs.release-tag-name }}
 
-      - 
-        name: Set package.json version
-        if: inputs.update-package-version == 'true'
-        run: npm version --allow-same-version --no-git-tag-version ${{ inputs.release-tag-name }}
-        shell: bash
-      
-      - 
-        name: Commit and push
-        if: inputs.update-openapi-version == 'true' || inputs.update-package-version == 'true'
-        run: |
-          git config user.name github-actions
-          git config user.email github-actions@github.com
-          git add .
-          git diff --exit-code || git commit -am "🔖 Set versions to release tag ${{ inputs.release-tag-name }}"
-          git push -f origin ${{ inputs.git-checkout-branch }}
-        shell: bash
+    - name: Set package.json version
+      if: inputs.update-package-version == 'true'
+      run: npm version --allow-same-version --no-git-tag-version ${{ inputs.release-tag-name }}
+      shell: bash
 
-      - name: Checkout
-        uses: actions/checkout@v3
-        with:
-          fetch-depth: 0
-          ref: ${{ inputs.git-checkout-branch }}
+    - name: Commit and push
+      if: inputs.update-openapi-version == 'true' || inputs.update-package-version == 'true'
+      run: |
+        git config user.name github-actions
+        git config user.email github-actions@github.com
+        git add .
+        git diff --exit-code || git commit -am "🔖 Set versions to release tag ${{ inputs.release-tag-name }}"
+        git push -f origin ${{ inputs.git-checkout-branch }}
+      shell: bash
 
-      - name: Repository Variable to Lowercase
-        id: string
-        uses: ASzc/change-string-case-action@v1
-        with:
-          string: ${{ github.repository }}
+    - name: Checkout
+      uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
+        ref: ${{ inputs.git-checkout-branch }}
 
-      - name: Login to GitHub Container Registry
-        uses: docker/login-action@v1
-        with:
-          registry: ghcr.io
-          username: ${{ inputs.docker-username }}
-          password: ${{ inputs.docker-password }}
+    - name: Repository Variable to Lowercase
+      id: string
+      uses: ASzc/change-string-case-action@v1
+      with:
+        string: ${{ github.repository }}
 
-      - name: Docker meta
-        id: meta
-        uses: docker/metadata-action@v4
-        with:
-          github-token: ${{ inputs.github-token }}
-          images: ghcr.io/${{ steps.string.outputs.lowercase }}
-          tags: |
-            # set latest tag for default branch
-            type=raw,value=latest,enable={{is_default_branch}}
-            type=schedule
-            type=ref,event=branch
-            type=ref,event=tag
-            type=ref,event=pr
-            type=semver,pattern=v{{version}}
-            type=semver,pattern=v{{major}}.{{minor}}
-            type=semver,pattern=v{{major}}
-            type=sha
-            type=sha,format=long
+    - name: Login to GitHub Container Registry
+      uses: docker/login-action@v1
+      with:
+        registry: ghcr.io
+        username: ${{ inputs.docker-username }}
+        password: ${{ inputs.docker-password }}
 
-      - name: Build and push
-        id: docker_build
-        uses: docker/build-push-action@v3
-        with:
-          context: .
-          push: ${{ github.event_name != 'pull_request' }}
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
-          no-cache: ${{ inputs.docker-no-cache }}
-          build-args: |
-            GITHUB_ACCESS_TOKEN=${{ inputs.github-token }}
-            ${{ inputs.extra-build-args }}
-            
+    - name: Docker meta
+      id: meta
+      uses: docker/metadata-action@v4
+      with:
+        github-token: ${{ inputs.github-token }}
+        images: ghcr.io/${{ steps.string.outputs.lowercase }}
+        tags: |
+          # set latest tag for default branch
+          type=raw,value=latest,enable={{is_default_branch}}
+          type=schedule
+          type=ref,event=branch
+          type=ref,event=tag
+          type=ref,event=pr
+          type=semver,pattern=v{{version}}
+          type=semver,pattern=v{{major}}.{{minor}}
+          type=semver,pattern=v{{major}}
+          type=sha
+          type=sha,format=long
 
-      - name: Trigger config repo update
-        uses: convictional/trigger-workflow-and-wait@v1.3.0
-        with:
-          owner: helsingborg-stad
-          repo: ${{ inputs.gdi-gitops-config-repo }}
-          github_token: ${{ inputs.gdi-gitops-token }}
-          workflow_file_name: update-config.yml
-          inputs: '{"semver": "${{ inputs.release-tag-name }}", "app": "${{ inputs.gdi-gitops-app }}", "environment": "${{ inputs.gdi-gitops-env }}"}'
-          wait_workflow: false
-          ref: main
+    - name: Build and push
+      id: docker_build
+      uses: docker/build-push-action@v3
+      with:
+        context: .
+        push: ${{ github.event_name != 'pull_request' }}
+        tags: ${{ steps.meta.outputs.tags }}
+        labels: ${{ steps.meta.outputs.labels }}
+        no-cache: ${{ inputs.docker-no-cache }}
+        build-args: |
+          GITHUB_ACCESS_TOKEN=${{ inputs.github-token }}
+          ${{ inputs.extra-build-args }}
+
+    - name: Trigger config repo update
+      uses: convictional/trigger-workflow-and-wait@v1.3.0
+      with:
+        owner: helsingborg-stad
+        repo: ${{ inputs.gdi-gitops-config-repo }}
+        github_token: ${{ inputs.gdi-gitops-token }}
+        workflow_file_name: update-config.yml
+        inputs: '{"semver": "${{ inputs.release-tag-name }}", "app": "${{ inputs.gdi-gitops-app }}", "environment": "${{ inputs.gdi-gitops-env }}"}'
+        wait_workflow: false
+        ref: main
