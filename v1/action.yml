@@ -61,6 +61,11 @@ inputs:
     required: false
     default: ''
 
+  extra-image-tags:
+    description: 'Extra tags to put on the docker image'
+    required: false
+    default: ''
+
   git-checkout-branch:
     description: The branch to checkout for building
     required: false
@@ -145,6 +150,7 @@ runs:
             type=semver,pattern=v{{major}}
             type=sha
             type=sha,format=long
+            ${{ inputs.extra-image-tags }}
 
       - name: Build and push
         id: docker_build
