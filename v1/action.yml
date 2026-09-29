@@ -110,15 +110,25 @@ runs:
             throw new Error(`Could not find top-level info mapping in ${file}`);
           }
 
-          let updated = false;
+          const infoLines = [];
+          let infoEnd = lines.length;
           for (let index = infoIndex + 1; index < lines.length; index += 1) {
             const line = lines[index];
             if (/^\S/.test(line)) {
+              infoEnd = index;
               break;
             }
+            if (/\S/.test(line) && !/^\s*#/.test(line)) infoLines.push(line);
+          }
+          const directIndent = Math.min(
+            ...infoLines.map((line) => line.match(/^\s*/)[0].length),
+          );
 
+          let updated = false;
+          for (let index = infoIndex + 1; index < infoEnd; index += 1) {
+            const line = lines[index];
             const match = line.match(/^(\s+version\s*:\s*).*$/);
-            if (match) {
+            if (match && match[1].match(/^\s*/)[0].length === directIndent) {
               lines[index] = `${match[1]}${version}`;
               updated = true;
               break;
