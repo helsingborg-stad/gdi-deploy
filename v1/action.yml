@@ -75,58 +75,100 @@ runs:
   using: composite
   steps:
       -
-        name: Echo debug info
-        shell: bash
-        run: |
-          echo "Setting version to ${{ inputs.release-tag-name }}"
-          echo "App is ${{ inputs.gdi-gitops-app }}"
-          echo "Environment is ${{ inputs.gdi-gitops-env }}"
-      -
         name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v7
         with:
           fetch-depth: 0
           ref: ${{ inputs.git-checkout-branch }}
 
       -
-        name: Set openapi version
-        uses: rmeneely/update-yaml@v1
-        if: inputs.update-openapi-version == 'true'
+        name: Set up Node.js
+        uses: actions/setup-node@v7
         with:
-          infile: ${{ inputs.openapi-spec-file }}
-          varlist: info.version=${{ inputs.release-tag-name }}
+          node-version: 24
+          package-manager-cache: false
+
+      -
+        name: Set openapi version
+        if: inputs.update-openapi-version == 'true'
+        shell: bash
+        env:
+          OPENAPI_SPEC_FILE: ${{ inputs.openapi-spec-file }}
+          RELEASE_TAG_NAME: ${{ inputs.release-tag-name }}
+        run: |
+          node <<'NODE'
+          const fs = require('node:fs');
+
+          const file = process.env.OPENAPI_SPEC_FILE;
+          const version = JSON.stringify(process.env.RELEASE_TAG_NAME);
+          const source = fs.readFileSync(file, 'utf8');
+          const newline = source.includes('\r\n') ? '\r\n' : '\n';
+          const lines = source.split(/\r?\n/);
+          const infoIndex = lines.findIndex((line) => /^info:\s*(?:#.*)?$/.test(line));
+
+          if (infoIndex === -1) {
+            throw new Error(`Could not find top-level info mapping in ${file}`);
+          }
+
+          let updated = false;
+          for (let index = infoIndex + 1; index < lines.length; index += 1) {
+            const line = lines[index];
+            if (/^\S/.test(line)) {
+              break;
+            }
+
+            const match = line.match(/^(\s+version\s*:\s*).*$/);
+            if (match) {
+              lines[index] = `${match[1]}${version}`;
+              updated = true;
+              break;
+            }
+          }
+
+          if (!updated) {
+            throw new Error(`Could not find info.version in ${file}`);
+          }
+
+          fs.writeFileSync(file, lines.join(newline));
+          NODE
 
       - 
         name: Set package.json version
         if: inputs.update-package-version == 'true'
-        run: npm version --allow-same-version --no-git-tag-version ${{ inputs.release-tag-name }}
         shell: bash
-      
+        env:
+          RELEASE_TAG_NAME: ${{ inputs.release-tag-name }}
+        run: npm version --allow-same-version --no-git-tag-version "$RELEASE_TAG_NAME"
+
       - 
         name: Commit and push
         if: inputs.update-openapi-version == 'true' || inputs.update-package-version == 'true'
+        shell: bash
+        env:
+          GIT_CHECKOUT_BRANCH: ${{ inputs.git-checkout-branch }}
+          RELEASE_TAG_NAME: ${{ inputs.release-tag-name }}
         run: |
           git config user.name github-actions
           git config user.email github-actions@github.com
-          git add .
-          git diff --exit-code || git commit -am "🔖 Set versions to release tag ${{ inputs.release-tag-name }}"
-          git push -f origin ${{ inputs.git-checkout-branch }}
-        shell: bash
+          git add --all
+          git diff --cached --quiet || git commit -m "🔖 Set versions to release tag ${RELEASE_TAG_NAME}"
+          git push --force-with-lease origin "HEAD:refs/heads/${GIT_CHECKOUT_BRANCH}"
 
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v7
         with:
           fetch-depth: 0
           ref: ${{ inputs.git-checkout-branch }}
 
       - name: Repository Variable to Lowercase
         id: string
-        uses: ASzc/change-string-case-action@v1
-        with:
-          string: ${{ github.repository }}
+        shell: bash
+        env:
+          REPOSITORY: ${{ github.repository }}
+        run: echo "lowercase=${REPOSITORY,,}" >> "$GITHUB_OUTPUT"
 
       - name: Login to GitHub Container Registry
-        uses: docker/login-action@v1
+        uses: docker/login-action@v4
         with:
           registry: ghcr.io
           username: ${{ inputs.docker-username }}
@@ -134,7 +176,7 @@ runs:
 
       - name: Docker meta
         id: meta
-        uses: docker/metadata-action@v4
+        uses: docker/metadata-action@v6
         with:
           github-token: ${{ inputs.github-token }}
           images: ghcr.io/${{ steps.string.outputs.lowercase }}
@@ -154,7 +196,7 @@ runs:
 
       - name: Build and push
         id: docker_build
-        uses: docker/build-push-action@v3
+        uses: docker/build-push-action@v7
         with:
           context: .
           push: ${{ github.event_name != 'pull_request' }}
@@ -164,15 +206,43 @@ runs:
           build-args: |
             GITHUB_ACCESS_TOKEN=${{ inputs.github-token }}
             ${{ inputs.extra-build-args }}
-            
 
       - name: Trigger config repo update
-        uses: convictional/trigger-workflow-and-wait@v1.3.0
-        with:
-          owner: helsingborg-stad
-          repo: ${{ inputs.gdi-gitops-config-repo }}
-          github_token: ${{ inputs.gdi-gitops-token }}
-          workflow_file_name: update-config.yml
-          inputs: '{"semver": "${{ inputs.release-tag-name }}", "app": "${{ inputs.gdi-gitops-app }}", "environment": "${{ inputs.gdi-gitops-env }}"}'
-          wait_workflow: false
-          ref: main
+        shell: bash
+        env:
+          GDI_GITOPS_APP: ${{ inputs.gdi-gitops-app }}
+          GDI_GITOPS_CONFIG_REPO: ${{ inputs.gdi-gitops-config-repo }}
+          GDI_GITOPS_ENV: ${{ inputs.gdi-gitops-env }}
+          GDI_GITOPS_TOKEN: ${{ inputs.gdi-gitops-token }}
+          RELEASE_TAG_NAME: ${{ inputs.release-tag-name }}
+        run: |
+          node --input-type=module <<'NODE'
+          const repository = process.env.GDI_GITOPS_CONFIG_REPO;
+          if (!/^[A-Za-z0-9_.-]+$/.test(repository)) {
+            throw new Error('gdi-gitops-config-repo must be a repository name');
+          }
+
+          const response = await fetch(
+            `${process.env.GITHUB_API_URL}/repos/helsingborg-stad/${repository}/actions/workflows/update-config.yml/dispatches`,
+            {
+              method: 'POST',
+              headers: {
+                Accept: 'application/vnd.github+json',
+                Authorization: ['Bearer', process.env.GDI_GITOPS_TOKEN].join(' '),
+                'X-GitHub-Api-Version': '2022-11-28',
+              },
+              body: JSON.stringify({
+                ref: 'main',
+                inputs: {
+                  semver: process.env.RELEASE_TAG_NAME,
+                  app: process.env.GDI_GITOPS_APP,
+                  environment: process.env.GDI_GITOPS_ENV,
+                },
+              }),
+            },
+          );
+
+          if (!response.ok) {
+            throw new Error(`Workflow dispatch failed with HTTP ${response.status}`);
+          }
+          NODE
