@@ -11,6 +11,8 @@
 # Summary
 This action will (optionally) set versions, build and deploy docker images for GDI microservices.
 
+The v1 action requires GitHub Actions Runner v2.327.1 or later because its JavaScript actions use the Node.js 24 runtime.
+
 # Parameters
 
 | Name                   | Description                                                                                   | Required |
@@ -26,3 +28,5 @@ This action will (optionally) set versions, build and deploy docker images for G
 | gdi-gitops-env         | Name of the overlay to update in the config repo                                              | true     |
 | docker-username        | Username to use when logging in to the docker registry                                        | true     |
 | docker-password        | Password to use when logging in to the docker registry                                        | true     |
+
+For v1 compatibility, `github-token` is also passed to Docker builds as the `GITHUB_ACCESS_TOKEN` build argument. Dockerfiles must not print it or persist it in an image layer; migrating this interface to a BuildKit secret requires a new major version.
