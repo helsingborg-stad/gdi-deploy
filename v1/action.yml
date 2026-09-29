@@ -114,7 +114,7 @@ runs:
           let infoEnd = lines.length;
           for (let index = infoIndex + 1; index < lines.length; index += 1) {
             const line = lines[index];
-            if (/^\S/.test(line)) {
+            if (/^\S/.test(line) && !/^#/.test(line)) {
               infoEnd = index;
               break;
             }
