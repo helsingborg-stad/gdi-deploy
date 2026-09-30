@@ -51,31 +51,27 @@ inputs:
 runs:
   using: composite
   steps:
-      -
-        name: Checkout code
+      - name: Checkout code
         uses: actions/checkout@v7
         with:
           fetch-depth: 0
           ref: ${{ inputs.git-checkout-branch }}
 
-      -
-        name: Set up Node.js
+      - name: Set up Node.js
         uses: actions/setup-node@v7
         with:
           node-version: 24
           package-manager-cache: false
 
-      - 
-        name: Set package.json version
+      - name: Set package.json version
         if: inputs.update-package-version == 'true'
         shell: bash
         env:
           RELEASE_TAG_NAME: ${{ inputs.release-tag-name }}
         run: npm version --allow-same-version --no-git-tag-version "$RELEASE_TAG_NAME"
 
-      - 
-        name: Commit and push
-        if: inputs.update-openapi-version == 'true' || inputs.update-package-version == 'true'
+      - name: Commit and push
+        if: inputs.update-package-version == 'true'
         shell: bash
         env:
           GIT_CHECKOUT_BRANCH: ${{ inputs.git-checkout-branch }}
@@ -86,12 +82,6 @@ runs:
           git add --all
           git diff --cached --quiet || git commit -m "🔖 Set versions to release tag ${RELEASE_TAG_NAME}"
           git push --force-with-lease origin "HEAD:refs/heads/${GIT_CHECKOUT_BRANCH}"
-
-      - name: Checkout
-        uses: actions/checkout@v7
-        with:
-          fetch-depth: 0
-          ref: ${{ inputs.git-checkout-branch }}
 
       - name: Repository Variable to Lowercase
         id: string
